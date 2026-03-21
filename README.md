@@ -1,82 +1,80 @@
-**CalorieAI Web API**
+# CalorieAI Web API
 
-A high-performance .NET Web API that leverages LLMs to estimate the nutritional composition of dishes from photographs. This serves as the backend engine for the CalorieAI mobile ecosystem.
+A .NET Web API that leverages Google Gemini to estimate the nutritional composition of dishes from photographs. Backend for the [CalorieAI Mobile Client](https://github.com/dgluhotorenko/CalorieEstimatorClient).
 
-**Core Capabilities**
+## Features
 
-Visual Food Recognition: Analyzes images to identify ingredients and portion sizes.
+- **Visual Food Recognition** — analyzes images to identify ingredients and portion sizes
+- **Nutritional Estimation** — calculates calories, proteins, fats, and carbohydrates per ingredient
+- **Context-Aware** — supports user notes (e.g., "hidden sauce", "extra cheese") to refine accuracy
+- **OpenAPI Support** — fully documented with Swagger UI
 
-Nutritional Estimation: Calculates calories, proteins, fats, and carbohydrates.
+## Tech Stack
 
-Context-Aware: Supports user notes (e.g., "hidden sauce" or "extra protein") to refine AI accuracy.
+| | |
+|---|---|
+| Framework | ASP.NET Core Minimal API (.NET 10) |
+| AI Model | Google Gemini 2.0 Flash |
+| Error Handling | Global `IExceptionHandler` + ProblemDetails (RFC 9457) |
+| Configuration | Options pattern with startup validation |
+| Testing | xUnit + NSubstitute + WebApplicationFactory |
 
-OpenAPI Support: Fully documented with Swagger UI for easy testing.
+## Getting Started
 
-**Getting Started**
+### Prerequisites
 
-Prerequisites
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- [Google Gemini API Key](https://aistudio.google.com/)
 
-.NET 8.0 SDK (or later)
+### Setup
 
-Google Gemini API Key (Get it at [Google AI Studio]([url](https://aistudio.google.com/)))
+```bash
+git clone https://github.com/dgluhotorenko/CalorieEstimatorApi.git
+cd CalorieEstimatorApi
+```
 
-**Installation & Run**
+Configure your API key using [User Secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) (keys stay local, never in git):
 
-Clone the repository:
+```bash
+dotnet user-secrets set "ApiKeys:Google" "YOUR_API_KEY"
+```
 
-git clone [https://github.com/dgluhotorenko/CalorieEstimatorApi.git](https://github.com/dgluhotorenko/CalorieEstimatorApi.git)
+Run:
 
-
-**Configure API Key:**
-Open appsettings.json and insert your Google API Key:
-
-{
-  "ApiKeys": {
-    "Google": "YOUR_API_KEY_HERE"
-  }
-}
-
-
-**Launch the API:**
-Press F5 in Rider/Visual Studio or run via CLI:
-
+```bash
 dotnet run
+```
 
+Open Swagger UI at `http://localhost:5064/swagger`.
 
-**Access Swagger UI:**
-Navigate to http://localhost:YOUR_PORT/swagger to explore and test the endpoints.
+### Testing from a Mobile Device
 
-Remote Testing (Mobile Integration)
+To expose the API to a physical device without deployment, use [Dev Tunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/):
 
-To test the API from a physical mobile device or external network without deployment, use Microsoft Dev Tunnels:
-
-**Install DevTunnel CLI:**
-
+```bash
 winget install Microsoft.DevTunnels
-
-
-Login:
-
 devtunnel user login
+devtunnel host -p 5064 --allow-anonymous
+```
 
+Use the generated HTTPS URL in your mobile client configuration.
 
-Host the Tunnel:
-With your API running, execute:
+## API
 
-devtunnel host -p YOUR_PORT --allow-anonymous
+### `POST /api/analyze`
 
+Accepts `multipart/form-data`:
 
-Note: Replace YOUR_PORT with your local port (e.g., 5064).
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `image` | file | yes | Photo of the dish (max 5 MB) |
+| `notes` | string | no | Additional context for the AI |
 
-**Connect:**
-Use the generated HTTPS URL (e.g., https://random-id.devtunnels.ms) in your Mobile Client configuration.
+Returns a JSON `FoodAnalysisResult` with dish name, total calories, confidence score, and per-ingredient breakdown (weight, calories, protein, fat, carbs).
 
-**Technical Details**
+## Running Tests
 
-Technology: ASP.NET Core Web API
-
-AI Integration: Google Gemini 1.5 Flash (via REST API)
-
-Format: Returns structured JSON mapped to FoodAnalysisResult model.
-
-Developed as the backend for the CalorieAI project.
+```bash
+cd CalorieApi.Tests
+dotnet test
+```

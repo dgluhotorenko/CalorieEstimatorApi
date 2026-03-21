@@ -1,4 +1,6 @@
 using CalorieApi.Abstract;
+using CalorieApi.Middleware;
+using CalorieApi.Options;
 using CalorieApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi;
@@ -11,10 +13,15 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Calorie Analysis API", Version = "v1" });
 });
 
-var googleApiKey = builder.Configuration["ApiKeys:Google"] ?? throw new Exception("Google API Key is missing in Config");
+builder.Services.AddOptions<ApiKeyOptions>()
+    .BindConfiguration(ApiKeyOptions.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 builder.Services.AddHttpClient<ICalorieEstimator, GoogleGeminiEstimator>();
-builder.Services.AddSingleton<ICalorieEstimator>(sp => new GoogleGeminiEstimator(googleApiKey, sp.GetRequiredService<IHttpClientFactory>()));
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
@@ -33,6 +40,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+app.UseExceptionHandler();
+
 app.MapGet("/", () => "Calorie API is running. Go to /swagger for UI.").ExcludeFromDescription();
 
 app.MapPost("/api/analyze", async (IFormFile image,
@@ -45,22 +54,16 @@ app.MapPost("/api/analyze", async (IFormFile image,
         if (image.Length > 5 * 1024 * 1024)
             return Results.BadRequest("Image is too large (max 5MB)");
 
-        try
-        {
-            using var memoryStream = new MemoryStream();
-            await image.CopyToAsync(memoryStream);
-            var imageBytes = memoryStream.ToArray();
+        using var memoryStream = new MemoryStream();
+        await image.CopyToAsync(memoryStream);
+        var imageBytes = memoryStream.ToArray();
 
-            var result = await estimator.AnalyzeFoodAsync(imageBytes, notes);
-            return Results.Ok(result);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.ToString());
-            return Results.Problem(detail: ex.Message, statusCode: 500);
-        }
+        var result = await estimator.AnalyzeFoodAsync(imageBytes, notes);
+        return Results.Ok(result);
     })
     .WithName("AnalyzeFood")
     .DisableAntiforgery();
 
 app.Run();
+
+public partial class Program;

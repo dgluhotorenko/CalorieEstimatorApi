@@ -1,18 +1,19 @@
 using System.Text.Json;
 using CalorieApi.Abstract;
 using CalorieApi.Models;
+using CalorieApi.Options;
+using Microsoft.Extensions.Options;
 
 namespace CalorieApi.Services;
 
-public class GoogleGeminiEstimator(string apiKey, IHttpClientFactory httpClientFactory) : ICalorieEstimator
+public class GoogleGeminiEstimator(HttpClient httpClient, IOptions<ApiKeyOptions> apiKeyOptions) : ICalorieEstimator
 {
-    private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
     private const string Model = "gemini-2.0-flash";
 
     public async Task<FoodAnalysisResult> AnalyzeFoodAsync(byte[] imageBytes, string? userNotes)
     {
         var base64Image = Convert.ToBase64String(imageBytes);
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/{Model}:generateContent?key={apiKey}";
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/{Model}:generateContent?key={apiKeyOptions.Value.Google}";
 
         var promptText = PromptConstants.SystemPrompt;
         if (!string.IsNullOrWhiteSpace(userNotes))
@@ -46,7 +47,7 @@ public class GoogleGeminiEstimator(string apiKey, IHttpClientFactory httpClientF
             }
         };
 
-        var response = await _httpClient.PostAsJsonAsync(url, payload);
+        var response = await httpClient.PostAsJsonAsync(url, payload);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -64,7 +65,8 @@ public class GoogleGeminiEstimator(string apiKey, IHttpClientFactory httpClientF
             .GetProperty("text")
             .GetString();
 
-        textResult = textResult?.Replace("```json", "").Replace("```", "").Trim();
+        textResult = textResult?.Replace("```json", "").Replace("```", "").Trim()
+                     ?? throw new Exception("Empty response from Google API");
 
         var options = new JsonSerializerOptions
         {
