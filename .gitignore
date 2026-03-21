@@ -1,0 +1,44 @@
+.NET / Visual Studio / Rider
+
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+MAUI Specific
+
+**/Platforms/Android/obj/
+**/Platforms/iOS/obj/
+**/Platforms/MacCatalyst/obj/
+**/Platforms/Windows/obj/
+
+OS-specific files
+
+.DS_Store
+Thumbs.db
+
+Publishing
+
+publish/
+*.pfx
+*.publishsettings
+
+NuGet
+
+node_modules/
+packages/
+*.nuget.props
+*.nuget.targets
+
+Temporary files
+
+*.swp
+*~
+*.log
