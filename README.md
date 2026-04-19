@@ -80,4 +80,4 @@ dotnet test
 ```
 
 ## The call via Swagger
-<img width="983" height="983" alt="image" src="https://github.com/user-attachments/assets/1acf5a3b-5bda-4617-8351-2684f033121a" />
+<img width="983" height="983" alt="image" src="https://raw.githubusercontent.com/dgluhotorenko/CalorieApi/master/docs/swagger.png" />
