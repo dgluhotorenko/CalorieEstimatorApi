@@ -39,10 +39,10 @@ Configure your API key using [User Secrets](https://learn.microsoft.com/en-us/as
 dotnet user-secrets set "ApiKeys:Google" "YOUR_API_KEY"
 ```
 
-Run:
+Run with the `http` launch profile (the mobile client expects the API on `http://localhost:5064`):
 
 ```bash
-dotnet run
+dotnet run --launch-profile http
 ```
 
 Open Swagger UI at `http://localhost:5064/swagger`.
