@@ -8,7 +8,7 @@ namespace CalorieApi.Services;
 
 public class GoogleGeminiEstimator(HttpClient httpClient, IOptions<ApiKeyOptions> apiKeyOptions) : ICalorieEstimator
 {
-    private const string Model = "gemini-2.0-flash";
+    private const string Model = "gemini-2.5-flash-lite";
 
     public async Task<FoodAnalysisResult> AnalyzeFoodAsync(byte[] imageBytes, string? userNotes)
     {
